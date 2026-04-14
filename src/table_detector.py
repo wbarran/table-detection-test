@@ -95,5 +95,8 @@ class TableDetector:
         """Run the prediction on multiple images and return a list of Table per image"""
         res: list[list[Table]] = []
         for src in image_sources:
-            res.append(self.predict(src))
+            try:
+                res.append(self.predict(src))
+            except Exception :
+                res.append([])
         return res
