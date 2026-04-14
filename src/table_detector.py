@@ -27,13 +27,24 @@ class TableDetector:
         confidence_threshold: Minimum confidence score to keep a detection.
     """
 
-    def __init__(self, confidence_threshold: float = 0.7, model_name: str = "TahaDouaji/detr-doc-table-detection") -> None:
+    def __init__(
+            self, 
+            confidence_threshold: float = 0.7, 
+            model_name: str = "TahaDouaji/detr-doc-table-detection",
+            processor = None,
+            model = None
+            ) -> None:
         if not (0.0 < confidence_threshold <= 1.0):
             raise ValueError(f"confidence_threshold must be in (0, 1], got {confidence_threshold}")
         self.confidence_threshold = confidence_threshold
+        self._processor = processor
+        self._model = model
+
         # Model and processor are loaded once at initialization for efficiency.
-        self._processor = DetrImageProcessor.from_pretrained(model_name)
-        self._model = DetrForObjectDetection.from_pretrained(model_name)
+        if self._processor is None or self._model is None:
+            self._processor = DetrImageProcessor.from_pretrained(model_name)
+            self._model = DetrForObjectDetection.from_pretrained(model_name)
+
         self._model.eval()
     
     def predict(self, image_source: str | Path | Image.Image) -> list[Table] :
