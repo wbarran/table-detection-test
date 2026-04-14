@@ -6,7 +6,7 @@ import pytest
 from PIL import Image
 from pathlib import Path
 
-from src.table_detector import TableDetector
+from src.table_detector import TableDetector, PredictionResult
 
 # Detector initialization
 
@@ -69,7 +69,7 @@ def test_successful_multiple_predict(detector: TableDetector, multiple_table_pat
     results = detector.multiple_predict(sources)
     assert isinstance(results, list)
     assert len(results) == 6
-    assert all(isinstance(r, list) for r in results)
+    assert all(isinstance(r, PredictionResult) for r in results)
 
 def test_no_table_extraction(detector: TableDetector, no_table_path: Path) -> None:
     results = detector.predict(no_table_path)

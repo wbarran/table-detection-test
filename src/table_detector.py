@@ -6,6 +6,7 @@ Uses the pre-trained DETR model (TahaDouaji/detr-doc-table-detection) to detect 
 
 from pathlib import Path
 from dataclasses import dataclass
+from typing import Optional
 
 from transformers import DetrImageProcessor, DetrForObjectDetection
 import torch
@@ -17,6 +18,12 @@ class Table:
     label: str
     score: float
     box: list[float] # [x_min, y_min, x_max, y_max]
+
+
+@dataclass
+class PredictionResult:
+    tables: list[Table]
+    error: Optional[Exception] = None
 
 class TableDetector:
     """
@@ -102,12 +109,18 @@ class TableDetector:
         return detected_tables
     
 
-    def multiple_predict(self, image_sources: list[str | Path | Image.Image]) -> list[list[Table]]:
+    def multiple_predict(self, image_sources: list[str | Path | Image.Image]) -> list[PredictionResult]:
         """Run the prediction on multiple images and return a list of Table per image"""
-        res: list[list[Table]] = []
-        for src in image_sources:
+        results: list[PredictionResult] = []
+        for i, src in enumerate(image_sources):
             try:
-                res.append(self.predict(src))
-            except Exception :
-                res.append([])
-        return res
+                tables = self.predict(src)
+                results.append(PredictionResult(tables=tables))
+            except Exception as exc :
+                results.append(
+                PredictionResult(
+                    tables=[],
+                    error=exc
+                )
+            )
+        return results

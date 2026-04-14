@@ -75,7 +75,7 @@ for table in results:
 ### Multiple prediction
 
 ```python
-results = detector.mutliple_predict([
+results = detector.multiple_predict([
     "invoice_1.png",
     "invoice_2.jpg",
     "bank_statement.webp"
