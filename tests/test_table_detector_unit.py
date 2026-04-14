@@ -13,7 +13,7 @@ from pathlib import Path
 from src.table_detector import Table, TableDetector, PredictionResult
 
 
-# mock detector
+# Fixture - mock detector
 @pytest.fixture
 def mock_detector() -> TableDetector:
     """
@@ -42,21 +42,25 @@ def mock_detector() -> TableDetector:
 
     return det
 
-# Unit Test
 
-def test_returns_detected_tables(mock_detector: TableDetector) -> None:
+# Tests - Prediction
+
+def test_predict_returns_two_tables(mock_detector: TableDetector) -> None:
         img = Image.new("RGB", (800, 1100), "white")
         results = mock_detector.predict(img)
         assert len(results) == 2
         assert all(isinstance(r, Table) for r in results)
 
-def test_sorted_by_score(mock_detector: TableDetector) -> None:
+def test_predict_results_sorted_by_score_desc(mock_detector: TableDetector) -> None:
         img = Image.new("RGB", (800, 1100), "white")
         results = mock_detector.predict(img)
         scores = [r.score for r in results]
         assert scores == sorted(scores, reverse=True)
 
-def test_batch_empty(mock_detector: TableDetector) -> None:
+
+# Tests - Batch prediction
+
+def test_multiple_predict_returns_empty_list_when_input_empty(mock_detector: TableDetector) -> None:
         assert mock_detector.multiple_predict([]) == []
         
 def test_batch_multiple(mock_detector: TableDetector) -> None:
@@ -66,7 +70,8 @@ def test_batch_multiple(mock_detector: TableDetector) -> None:
         assert all(isinstance(r, PredictionResult) for r in results)
 
 
-# Image loading
+# Tests - Image loading
+
 def test_load_pil_image() -> None:
         img = Image.new("RGB", (100, 100), "red")
         result = TableDetector._load_image(img)
