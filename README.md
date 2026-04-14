@@ -78,7 +78,7 @@ for table in results:
 results = detector.mutliple_predict([
     "invoice_1.png",
     "invoice_2.jpg",
-    "bank_statement.webp",  # must be an image, not a raw PDF
+    "bank_statement.webp"
 ])
 ```
 
