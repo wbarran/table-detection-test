@@ -68,26 +68,52 @@ class TableDetector:
             ValueError: If the file cannot be opened as a valid image.
         """
         
-        # Source processing
-        if isinstance(image_source, Image.Image): # Either an Image.Image
-            img = image_source
+        img = self._load_image(image_source)
+        return self._run_model(img)
+    
+
+    def multiple_predict(self, image_sources: list[str | Path | Image.Image]) -> list[PredictionResult]:
+        """Run the prediction on multiple images and return a list of Table per image"""
+        results: list[PredictionResult] = []
+        for i, src in enumerate(image_sources):
+            try:
+                tables = self.predict(src)
+                results.append(PredictionResult(tables=tables))
+            except Exception as exc :
+                results.append(
+                PredictionResult(
+                    tables=[],
+                    error=exc
+                )
+            )
+        return results
+
+    # Helper function
+    @staticmethod
+    def _load_image(source: str | Path | Image.Image) -> Image.Image:
+        """Load and validate an image from various source types."""
+        if isinstance(source, Image.Image): # Either an Image.Image
+            return source
         else: # Or a string / Path
-            path = Path(image_source)
+            path = Path(source)
             if not path.exists():
                 raise FileNotFoundError(f"Image file not found : {path}")
             try:
                 img = Image.open(path).convert("RGB")
+                return img
             except Exception as exc :
                 raise ValueError(f"Cannot open image at {path} : {exc}") from exc
-
+            
+    def _run_model(self, image: Image.Image) -> list[Table]:
+        """Run the model on a single PIL image."""
         # Load the Image in processor
-        inputs = self._processor(images=img, return_tensors="pt")
+        inputs = self._processor(images=image, return_tensors="pt")
         # Run the model
         with torch.no_grad():
             outputs = self._model(**inputs)
 
         # convert outputs 
-        width, height = img.size
+        width, height = image.size
         target_sizes = torch.tensor([[height, width]])
         results = self._processor.post_process_object_detection(
             outputs, target_sizes=target_sizes, threshold=self.confidence_threshold
@@ -107,20 +133,3 @@ class TableDetector:
         # Sort the list by descending score
         detected_tables.sort(key = lambda t: t.score, reverse=True)
         return detected_tables
-    
-
-    def multiple_predict(self, image_sources: list[str | Path | Image.Image]) -> list[PredictionResult]:
-        """Run the prediction on multiple images and return a list of Table per image"""
-        results: list[PredictionResult] = []
-        for i, src in enumerate(image_sources):
-            try:
-                tables = self.predict(src)
-                results.append(PredictionResult(tables=tables))
-            except Exception as exc :
-                results.append(
-                PredictionResult(
-                    tables=[],
-                    error=exc
-                )
-            )
-        return results

@@ -8,8 +8,9 @@ import pytest
 from unittest.mock import MagicMock
 import torch
 from PIL import Image
+from pathlib import Path
 
-from src.table_detector import Table, TableDetector
+from src.table_detector import Table, TableDetector, PredictionResult
 
 
 # mock detector
@@ -55,3 +56,30 @@ def test_sorted_by_score(mock_detector: TableDetector) -> None:
         scores = [r.score for r in results]
         assert scores == sorted(scores, reverse=True)
 
+def test_batch_empty(mock_detector: TableDetector) -> None:
+        assert mock_detector.multiple_predict([]) == []
+        
+def test_batch_multiple(mock_detector: TableDetector) -> None:
+        imgs = [Image.new("RGB", (100, 100), c) for c in ("red", "green", "blue")]
+        results = mock_detector.multiple_predict(imgs)
+        assert len(results) == 3
+        assert all(isinstance(r, PredictionResult) for r in results)
+
+
+# Image loading
+def test_load_pil_image() -> None:
+        img = Image.new("RGB", (100, 100), "red")
+        result = TableDetector._load_image(img)
+        assert result.mode == "RGB"
+
+def test_load_from_valid_path(bank_path: Path) -> None:
+    result = TableDetector._load_image(bank_path)
+    assert result.mode == "RGB"
+
+def test_load_nonexistent_raises() -> None:
+    with pytest.raises(FileNotFoundError):
+        TableDetector._load_image("no_file")
+
+def test_load_corrupted_raises(wrong_format_path: Path) -> None:
+    with pytest.raises(ValueError, match="Cannot open image"):
+        TableDetector._load_image(wrong_format_path)
