@@ -40,7 +40,7 @@ git clone https://github.com/wbarran/table-detection-test.git
 cd table-detection-test
 
 # Create a virtual environment (recommended)
-python -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate  # Linux/macOS
 # .venv\Scripts\activate   # Windows
 
